@@ -1,5 +1,6 @@
 {
-  "name": "accepts",
+  "name": "level5",
+  "type": "module",
   "description": "Higher-level content negotiation",
   "version": "2.0.0",
   "contributors": [
@@ -9,6 +10,8 @@
   "license": "MIT",
   "repository": "jshttp/accepts",
   "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
     "mime-types": "^3.0.0",
     "negotiator": "^1.0.0"
   },
