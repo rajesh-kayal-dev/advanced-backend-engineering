@@ -1,229 +1,175 @@
 # Advanced Backend Engineering
 
-A **production-grade backend engineering curriculum** that progresses from containerized microservices to distributed systems architecture. This repository demonstrates real-world backend patterns including Docker orchestration, Redis-powered caching & job queues, Nginx load balancing, and an API Gateway microservices decomposition.
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![Express](https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
+![Nginx](https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white)
+![LangChain](https://img.shields.io/badge/LangChain-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)
+![Groq](https://img.shields.io/badge/Groq-F55036?style=for-the-badge&logo=groq&logoColor=white)
+![Qdrant](https://img.shields.io/badge/Qdrant-000000?style=for-the-badge&logo=qdrant&logoColor=white)
+![Amazon ECS](https://img.shields.io/badge/Amazon_ECS-FF9900?style=for-the-badge&logo=amazon-aws&logoColor=white)
+![AWS Fargate](https://img.shields.io/badge/AWS_Fargate-FF9900?style=for-the-badge&logo=amazon-aws&logoColor=white)
+![ALB](https://img.shields.io/badge/ALB-FF9900?style=for-the-badge&logo=amazon-aws&logoColor=white)
+![CloudFormation](https://img.shields.io/badge/CloudFormation-FF9900?style=for-the-badge&logo=amazon-aws&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)
+
+A complete backend course that takes you from Docker basics all the way to deploying AI-powered apps on AWS. Each level builds on the previous one — start with containers, then add databases and queues, split into microservices, integrate AI models, and finally deploy to the cloud with ECS Fargate.
 
 ---
 
-## Architecture Overview
+## Topics
+
+`#backend` `#nodejs` `#express` `#docker` `#redis` `#mongodb` `#nginx` `#microservices` `#ai` `#langchain` `#rag` `#aws` `#ecs` `#fargate` `#ecr` `#alb` `#devops` `#cloudformation`
+
+---
+
+## Architecture Diagrams
+
+### Level 4 — AI Integration Flow
+
+How the backend talks to AI models:
 
 ```mermaid
 graph TB
-    subgraph Level3["Level 3 — Microservices & Load Balancing"]
-        LB["Nginx Load Balancer"]
-        GW1["API Gateway<br/>(express-http-proxy)"]
-        GW2["API Gateway<br/>(express-http-proxy)"]
-        AS["Auth Service<br/>Port 8001"]
-        OS["Order Service<br/>Port 8002"]
-        PS["Product Service<br/>Port 8003"]
-        LB --> GW1 & GW2
-        GW1 --> AS & OS & PS
-        GW2 --> AS & OS & PS
+    subgraph Phase1["Phase 1 — AI Chat Agent"]
+        C1["You send a question<br/>POST /"] --> AGENT["LangGraph Agent<br/>(JARVIS)"]
+        AGENT --> LLM1["Groq Llama 3.3-70b<br/>(brain of the agent)"]
+        AGENT --> SEARCH["Tavily Web Search<br/>(looks up answers online)"]
+        AGENT --> MEMORY["MemorySaver<br/>(remembers conversation)"]
+        AGENT --> R1["Agent replies back"]
     end
 
-    subgraph Level2["Level 2 — Redis & Queues"]
-        API2["Express API<br/>Port 8000"]
-        MDB[(MongoDB<br/>Mongoose ODM)]
-        RDS[("Redis<br/>Cache + Rate Limit")]
-        BQ["BullMQ<br/>Queue"]
-        WK["Worker<br/>Email Processor"]
-        API2 --> MDB
-        API2 --> RDS
-        API2 --> BQ
-        BQ --> WK
-    end
-
-    subgraph Level1["Level 1 — Foundations & Docker"]
-        S1["Express Server<br/>Docker Container"]
-        S2["Docker Compose<br/>Backend + Frontend + Redis"]
-    end
-
-    Client["Client"] --> Level3
-    Level3 --> Level2
-    Level2 --> Level1
-```
-
----
-
-## Levels
-
-### Level 1 — Foundations & Containerization
-- **Phase 1:** Dockerize a Node.js/Express server from scratch with Dockerfile best practices
-- **Phase 2:** Multi-container orchestration with Docker Compose — backend API, React frontend (Vite), and Redis, all wired together
-
-### Level 2 — Redis, Queues & Background Jobs
-- **MongoDB with Mongoose ODM** — schema design, models, and CRUD
-- **Redis Caching** — cache-aside pattern for database query optimization
-- **BullMQ Job Queue** — async email processing with workers
-- **Redis Rate Limiting** — IP-based throttling middleware
-- **OTP System** — time-limited OTP generation and verification with Redis
-
-### Level 3 — Distributed Systems & Microservices
-- **Phase 1: Nginx Load Balancing** — horizontal scaling with 3 Express server replicas behind a round-robin Nginx reverse proxy
-- **Phase 2: Microservices Architecture** — API Gateway pattern with `express-http-proxy` routing to dedicated Auth, Order, and Product services, fronted by Nginx
-
----
-
-## Docker Architecture
-
-Multi-container orchestration across all levels using Docker and Docker Compose.
-
-```mermaid
-graph LR
-    subgraph L1P1["Level 1 Phase 1 — Single Container"]
-        D1["Dockerfile"] --> C1["express-app<br/>Container"]
-        C1 --> P1["Port 3000"]
-    end
-
-    subgraph L1P2["Level 1 Phase 2 — Docker Compose"]
-        DC1["docker-compose.yml"] --> BE["backend<br/>Express API"]
-        DC1 --> FE["frontend<br/>React + Vite"]
-        DC1 --> R1["redis<br/>Cache"]
-        BE --> P2["Port 7000"]
-        FE --> P3["Port 5173"]
-    end
-
-    subgraph L2["Level 2 — Redis Services"]
-        DC2["docker-compose.yml"] --> R2["redis<br/>Queue Backend"]
-        DC2 --> APP["Express App<br/>(host)"]
-        APP --> R2
-    end
-
-    subgraph L3P1["Level 3 Phase 1 — Load Balancing"]
-        DC3["docker-compose.yml"] --> NGINX1["nginx<br/>Load Balancer"]
-        DC3 --> SVR1["server1:7000"]
-        DC3 --> SVR2["server2:7000"]
-        DC3 --> SVR3["server3:7000"]
-        NGINX1 -- round-robin --> SVR1 & SVR2 & SVR3
-    end
-
-    subgraph L3P2["Level 3 Phase 2 — Microservices"]
-        DC4["docker-compose.yml"] --> NGINX2["nginx<br/>Load Balancer"]
-        DC4 --> G1["gateway1:8000"]
-        DC4 --> G2["gateway2:8000"]
-        DC4 --> AUTH["auth:8001"]
-        DC4 --> ORDER["order:8002"]
-        DC4 --> PROD["product:8003"]
-        NGINX2 --> G1 & G2
-        G1 --> AUTH & ORDER & PROD
-        G2 --> AUTH & ORDER & PROD
+    subgraph Phase2["Phase 2 — RAG (Read a PDF & Answer)"]
+        PDF["knowlaege.pdf"] --> CHUNK["Split into small pieces"]
+        CHUNK --> EMBED["Jina Embeddings<br/>(turns text into numbers)"]
+        EMBED --> VECTOR["Qdrant Vector DB<br/>(stores the numbers)"]
+        C2["You ask a question<br/>POST /"] --> SEARCH2["Find similar content<br/>in vector DB"]
+        VECTOR --> SEARCH2
+        SEARCH2 --> LLM2["Groq Llama 3.3-70b<br/>(answers from PDF only)"]
+        LLM2 --> R2["Answer from PDF"]
     end
 ```
 
----
+### Level 5 — AWS Cloud Deployment Flow
 
-## Redis Patterns
-
-Redis is used across Level 2 for caching, rate limiting, OTP management, and background job queues.
+How traffic flows from the internet to your app:
 
 ```mermaid
 graph TB
-    subgraph Patterns["Redis Use Cases"]
-        direction TB
-        CACHE["Cache-Aside Pattern<br/><br/>GET /cache -> Redis lookup<br/>Miss -> Query MongoDB<br/>Set Redis with TTL"]
-        RL["Rate Limiting<br/><br/>IP-based counter in Redis<br/>5 requests / 60s window<br/>429 when exceeded"]
-        OTP["OTP System<br/><br/>Generate 6-digit code<br/>Store in Redis with 30s TTL<br/>Verify & delete on match"]
-        BULL["BullMQ Queue<br/><br/>Enqueue email job<br/>Worker processes async<br/>Mock email sender"]
+    subgraph AWS["AWS Cloud (ap-south-1)"]
+        ALB["Application Load Balancer<br/>rajesh-lb<br/>DNS: rajesh-lb-224347244.ap-south-1.elb.amazonaws.com"]
+        TG["Target Group<br/>rajesh-tg<br/>Port 5000 | /health check"]
+
+        subgraph VPC["Default VPC"]
+            T1["Fargate Task 1<br/>ap-south-1c · 172.31.25.39<br/>1 vCPU · 3GB RAM<br/>✅ HEALTHY"]
+            T2["Fargate Task 2<br/>ap-south-1a · 172.31.34.255<br/>1 vCPU · 3GB RAM<br/>✅ HEALTHY"]
+        end
+
+        ECR["ECR Repository<br/>level5-docker:latest"]
+        CW["CloudWatch Logs<br/>/ecs/level5-docker"]
     end
 
-    subgraph Data["Data Stores"]
-        MDB[(MongoDB<br/>Persistent Storage)]
-        RDS[("Redis<br/>In-Memory Store")]
-    end
-
-    CACHE --> MDB
-    CACHE --> RDS
-    RL --> RDS
-    OTP --> RDS
-    BULL --> RDS
-
-    style RDS fill:#f9f,stroke:#333,stroke-width:2px
-    style MDB fill:#dfd,stroke:#333,stroke-width:2px
+    USER["Internet"] --> ALB
+    ALB --> TG
+    TG --> T1 & T2
+    T1 --> CW
+    T2 --> CW
+    ECR -.-> T1 & T2
 ```
 
 ---
 
-## System Design — Microservices Flow
+## Course Roadmap
 
-Request flow through the Level 3 Phase 2 microservices architecture.
+### Level 1 — Docker Basics
+Start here. Learn to containerize a Node.js app and run multiple services together.
 
-```mermaid
-sequenceDiagram
-    participant C as Client
-    participant N as Nginx (Port 80)
-    participant G as API Gateway (Port 8000)
-    participant A as Auth Service (Port 8001)
-    participant O as Order Service (Port 8002)
-    participant P as Product Service (Port 8003)
+| Phase | What You Learn |
+|-------|---------------|
+| Phase 1 | Write a Dockerfile, build an image, run a container |
+| Phase 2 | Docker Compose — run backend + frontend + Redis together |
 
-    Note over C,P: Load Balancing Phase
-    C->>N: HTTP Request
-    N->>N: Round-robin selection
-    N->>G: Proxy to gateway
+### Level 2 — Databases, Caching & Queues
+Add real data storage, speed things up with caching, and process background jobs.
 
-    Note over G,P: API Gateway Phase
-    alt /auth/*
-        G->>A: Proxy to Auth Service
-        A-->>G: Response
-    else /order/*
-        G->>O: Proxy to Order Service
-        O-->>G: Response
-    else /product/*
-        G->>P: Proxy to Product Service
-        P-->>G: Response
-    end
-    G-->>N: Forward Response
-    N-->>C: HTTP Response
-```
+| Concept | What It Does |
+|---------|-------------|
+| MongoDB + Mongoose | Store and retrieve data with schemas |
+| Redis Caching | Cache database queries so pages load faster |
+| BullMQ Queue | Send emails in the background without blocking |
+| Rate Limiting | Stop abuse — max 5 requests per minute per IP |
+| OTP System | Generate 6-digit codes that expire in 30 seconds |
 
----
+### Level 3 — Microservices & Load Balancing
+Split a big app into smaller services and distribute traffic.
 
-## Tech Stack
+| Phase | What You Learn |
+|-------|---------------|
+| Phase 1 | Nginx round-robin across 3 Express server replicas |
+| Phase 2 | API Gateway pattern — Auth, Order, and Product services behind Nginx |
 
-| Category | Technology |
-|----------|-----------|
-| **Runtime** | Node.js (ES Modules) |
-| **Framework** | Express.js 5 |
-| **Database** | MongoDB + Mongoose ODM |
-| **Caching & Queue** | Redis + BullMQ + ioredis |
-| **Containerization** | Docker + Docker Compose |
-| **Load Balancing** | Nginx |
-| **API Gateway** | express-http-proxy |
-| **Frontend** | React 19 + Vite |
+### Level 4 — AI Integration
 
----
+Add artificial intelligence to your backend.
 
-## Quick Start
+| Phase | What You Build | AI Services Used |
+|-------|---------------|------------------|
+| **Phase 1 — AI Chat Agent** | A smart assistant (JARVIS) that can chat and search the web | **Groq** (Llama 3.3-70b), **Tavily** (web search), **LangGraph** (agent logic), **MemorySaver** (chat memory) |
+| **Phase 2 — RAG System** | Upload a PDF and ask questions about it — the AI only answers from the PDF content | **Groq** (Llama 3.3-70b), **Jina Embeddings** (text → numbers), **Qdrant** (vector database), **pdf-parse** (read PDFs) |
 
-### Prerequisites
-- Node.js 18+
-- Docker & Docker Compose
-- MongoDB (local or Atlas)
-
-### Run Each Phase
+#### Level 4 Setup
 
 ```bash
-# Level 1 — Dockerized Express server
-cd level1/phase1/Dockerfilefolder
-docker build -t express-app .
-docker run -p 3000:3000 express-app
-
-# Level 1 — Full stack with Docker Compose
-cd level1/phase2
-docker compose up
-
-# Level 2 — Redis, queues, rate limiting
-cd level2/phase1
+# Phase 1 — AI Agent
+cd level4/phase1
 npm install
-docker compose up -d    # starts Redis
+# Add your API keys to .env
 npm run dev
 
-# Level 3 — Nginx load balancing
-cd level3/phase1
-docker compose up
+# Phase 2 — RAG
+cd level4/phase2
+npm install
+# Add your API keys to .env
+# Uncomment upload() in index.js, run once, then comment it back
+npm run dev
+```
 
-# Level 3 — Microservices with API Gateway
-cd level3/phase2
-docker compose up
+### Level 5 — Cloud Deployment (AWS)
+
+Take your app to the cloud with Docker and AWS.
+
+| Phase | What You Build | Services Used |
+|-------|---------------|---------------|
+| **Phase 1 — Docker + CI/CD** | Dockerize the app, push to GitHub, auto-deploy to EC2 | Docker, Docker Compose, GitHub Actions, EC2 |
+| **Phase 2 — ECS Fargate** | Serverless container orchestration on AWS (live now!) | ECS, Fargate, ECR, ALB, VPC, CloudFormation, CloudWatch |
+
+#### Live Infrastructure (Currently Running)
+
+| Resource | Name | Details |
+|----------|------|---------|
+| **Cluster** | `excellent-bird-050tm2` | Fargate serverless cluster |
+| **Service** | `level5-docker-service-k9t309hl` | 2 tasks running, rolling deployments |
+| **Task Definition** | `level5-docker:1` | 1 vCPU · 3GB RAM · port 5000 |
+| **Container** | `level5-docker-cont` | Health check: `curl /health` every 30s |
+| **Docker Image** | `level5-docker:latest` | Stored in ECR |
+| **Load Balancer** | `rajesh-lb` | Internet-facing, HTTP on port 80 |
+| **Target Group** | `rajesh-tg` | Routes to port 5000, checks `/health` |
+| **VPC** | Default VPC (`vpc-07a5c88c0686b61e5`) | 3 public subnets across ap-south-1a, 1b, 1c |
+| **Logs** | CloudWatch `/ecs/level5-docker` | All container logs stream here |
+| **Infrastructure** | CloudFormation | 2 stacks: one for cluster, one for service + ALB |
+
+#### Level 5 Setup
+
+```bash
+# Phase 1 — Run locally with Docker
+cd level5/phase1
+docker compose up -d
+curl http://localhost:5000/health
+
+# Phase 2 — Already deployed to AWS!
+# The app is live behind the ALB.
 ```
 
 ---
@@ -232,37 +178,48 @@ docker compose up
 
 ```
 .
-├── level1/                   # Foundations
-│   ├── phase1/               #   Docker basics
-│   └── phase2/               #   Docker Compose (backend + frontend + Redis)
-├── level2/                   # Redis, Queues, Middleware
-│   └── phase1/               #   Caching, BullMQ, rate limiting, OTP
-└── level3/                   # Distributed Systems
-    ├── phase1/               #   Nginx load balancing
-    └── phase2/               #   Microservices + API Gateway
-        └── backend/
-            ├── gateway/      #     API Gateway (express-http-proxy)
-            └── services/
-                ├── auth/     #     Auth microservice
-                ├── order/    #     Order microservice
-                └── product/  #     Product microservice
+├── level1/                        # Docker Basics
+│   ├── phase1/                    #   Single Docker container
+│   └── phase2/                    #   Docker Compose (backend + frontend + Redis)
+├── level2/                        # Redis, Queues, Database
+│   └── phase1/                    #   MongoDB, caching, BullMQ, rate limiting, OTP
+├── level3/                        # Distributed Systems
+│   ├── phase1/                    #   Nginx load balancing
+│   └── phase2/                    #   Microservices with API Gateway
+├── level4/                        # AI Integration
+│   ├── phase1/                    #   LangGraph AI Agent (JARVIS)
+│   └── phase2/                    #   RAG — ask questions from a PDF
+└── level5/                        # Cloud Deployment
+    ├── phase1/                    #   Docker + GitHub Actions CI/CD
+    └── phase2/                    #   AWS ECS / Fargate (live)
 ```
 
 ---
 
-## Key Patterns Demonstrated
+## Key Concepts Covered
 
-- **Containerization:** Multi-stage Dockerfiles, Docker Compose networking
-- **Caching Strategy:** Cache-aside (lazy loading) with Redis TTL invalidation
-- **Background Jobs:** BullMQ producers and workers for async email processing
-- **Rate Limiting:** Sliding window rate limiter using Redis (5 req/min per IP)
-- **OTP Workflow:** Time-based OTP generation with 30s expiry and verification
-- **Load Balancing:** Nginx upstream with round-robin across stateless replicas
-- **API Gateway:** Centralized routing, service abstraction, and proxy forwarding
-- **Microservices:** Service decomposition with isolated Docker containers
+- **Docker** — containerize apps, multi-stage builds, Docker Compose networking
+- **Redis** — caching (cache-aside), rate limiting (sliding window), OTP storage, BullMQ queues
+- **MongoDB** — Mongoose schemas, models, CRUD operations
+- **Nginx** — reverse proxy, round-robin load balancing, upstream configuration
+- **Microservices** — service decomposition, API Gateway pattern, express-http-proxy
+- **AI Agents** — LangGraph StateGraph, tool-calling, conversational memory with MemorySaver
+- **RAG** — PDF parsing, text chunking, embeddings, vector similarity search
+- **AWS ECS Fargate** — serverless containers, task definitions, service auto-scaling
+- **ALB** — internet-facing load balancer, target groups, health checks
+- **CloudFormation** — infrastructure as code, repeatable stack deployments
+- **CI/CD** — GitHub Actions automating EC2 deployment on git push
 
 ---
 
 ## License
 
 MIT
+
+Copyright (c) 2026
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
