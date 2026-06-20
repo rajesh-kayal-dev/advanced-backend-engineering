@@ -21,7 +21,7 @@ A progressive backend engineering course that starts with Docker containers and 
 
 ## Topics
 
-`#backend-engineering` `#nodejs` `#express` `#docker` `#redis` `#mongodb` `#nginx` `#microservices` `#api-gateway` `#langchain` `#langgraph` `#rag` `#ai-agent` `#groq` `#qdrant` `#aws` `#ecs` `#fargate` `#ecr` `#alb` `#cloudformation` `#github-actions` `#devops` `#cicd` `#system-design`
+`#backend-engineering` `#nodejs` `#express` `#docker` `#redis` `#mongodb` `#nginx` `#microservices` `#api-gateway` `#langchain` `#langgraph` `#rag` `#ai-agent` `#groq` `#qdrant` `#aws` `#ecs`  `#ecr` `#alb` `#cloudformation` `#github-actions` `#devops` `#cicd` `#system-design`
 
 ---
 
