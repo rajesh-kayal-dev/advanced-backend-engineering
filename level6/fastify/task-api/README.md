@@ -1,7 +1,6 @@
-````markdown
 # Fastify Task API
 
-A RESTful Task Management API built with Fastify, Prisma, PostgreSQL, and JWT Authentication.
+A RESTful Task Management API built with **Fastify**, **Prisma ORM**, **PostgreSQL**, and **JWT Authentication**.
 
 This project demonstrates a clean backend architecture with user authentication, protected routes, and task management.
 
@@ -9,12 +8,53 @@ This project demonstrates a clean backend architecture with user authentication,
 
 ## Tech Stack
 
-- Fastify
-- Prisma ORM
-- PostgreSQL
-- JWT Authentication
-- Bcrypt
-- Swagger (API Documentation)
+| Category           | Technology                                      |
+| ------------------ | ----------------------------------------------- |
+| **Runtime**        | Node.js                                         |
+| **Framework**      | Fastify                                         |
+| **ORM**            | Prisma                                          |
+| **Database**       | PostgreSQL                                      |
+| **Auth**           | JWT (Access + Refresh Tokens)                   |
+| **Password Hash**  | Bcrypt                                          |
+| **API Docs**       | Swagger (via `@fastify/swagger`)                |
+| **Security**       | Helmet, CORS, Rate Limiting, JSON Schema Validation |
+
+---
+
+## Architecture
+
+```mermaid
+flowchart TB
+  Client[Client / Postman / Frontend]
+
+  subgraph Fastify_Server [Fastify Server]
+    direction TB
+    MW[Middleware Layer<br/>Helmet / CORS / Rate Limiter]
+    Auth[Authentication Plugin<br/>JWT Validation]
+    Routes[Route Layer]
+    Val[Request Validation<br/>JSON Schema]
+    Ctrl[Controllers]
+    Svc[Services / Business Logic]
+    Prisma[Prisma Client]
+  end
+
+  PG[(PostgreSQL Database)]
+
+  Client -->|HTTP Request| MW
+  MW --> Auth
+  Auth --> Routes
+  Routes --> Val
+  Val --> Ctrl
+  Ctrl --> Svc
+  Svc --> Prisma
+  Prisma --> PG
+
+  subgraph Docs [API Documentation]
+    SW[Swagger UI<br/>/docs]
+  end
+
+  Routes -.-> SW
+```
 
 ---
 
@@ -25,7 +65,7 @@ This project demonstrates a clean backend architecture with user authentication,
 - User Registration
 - User Login
 - JWT Access Token
-- Refresh Token
+- Refresh Token Rotation
 - Logout
 - Protected Routes
 
@@ -54,14 +94,14 @@ This project demonstrates a clean backend architecture with user authentication,
 
 ```text
 src/
-├── config/
-├── controllers/
-├── plugins/
-├── routes/
-├── schemas/
-├── services/
-├── app.js
-└── server.js
+├── config/        # Configuration (env, db, jwt)
+├── controllers/   # Route handlers
+├── plugins/       # Fastify plugins (auth, swagger, etc.)
+├── routes/        # Route definitions
+├── schemas/       # JSON Schema validation
+├── services/      # Business logic
+├── app.js         # App setup & plugin registration
+└── server.js      # Entry point
 ```
 
 ---
@@ -120,7 +160,7 @@ npx prisma generate
 
 ## Run the Project
 
-Development
+**Development**
 
 ```bash
 npm run dev
@@ -130,7 +170,7 @@ npm run dev
 
 ## API Documentation
 
-Swagger UI
+Swagger UI is available at:
 
 ```
 http://localhost:3000/docs
@@ -142,30 +182,30 @@ http://localhost:3000/docs
 
 ### Authentication
 
-| Method | Endpoint |
-|---------|----------|
-| POST | /auth/register |
-| POST | /auth/login |
-| POST | /auth/refresh |
-| POST | /auth/logout |
+| Method | Endpoint          |
+| ------ | ----------------- |
+| POST   | /auth/register    |
+| POST   | /auth/login       |
+| POST   | /auth/refresh     |
+| POST   | /auth/logout      |
 
 ### Users
 
-| Method | Endpoint |
-|---------|----------|
-| GET | /users/profile |
+| Method | Endpoint        |
+| ------ | --------------- |
+| GET    | /users/profile  |
 
 ### Tasks
 
-| Method | Endpoint |
-|---------|----------|
-| POST | /tasks |
-| GET | /tasks |
-| GET | /tasks/:id |
-| PATCH | /tasks/:id |
-| DELETE | /tasks/:id |
-| GET | /tasks/search |
-| GET | /tasks/pagination |
+| Method | Endpoint          |
+| ------ | ----------------- |
+| POST   | /tasks            |
+| GET    | /tasks            |
+| GET    | /tasks/:id        |
+| PATCH  | /tasks/:id        |
+| DELETE  | /tasks/:id        |
+| GET    | /tasks/search     |
+| GET    | /tasks/pagination |
 
 ---
 
@@ -188,4 +228,3 @@ This project helped me learn:
 ## License
 
 This project is for learning and portfolio purposes.
-````
