@@ -1,59 +1,141 @@
 # Fastify Task API
 
-A RESTful Task Management API built with **Fastify**, **Prisma ORM**, **PostgreSQL**, and **JWT Authentication**.
+![Node](https://img.shields.io/badge/Node-20%2B-339933?logo=node.js&logoColor=white)
+![Fastify](https://img.shields.io/badge/Fastify-5-000000?logo=fastify)
+![Prisma](https://img.shields.io/badge/Prisma-6-2D3748?logo=prisma)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
+![JWT](https://img.shields.io/badge/Auth-JWT-000000?logo=jsonwebtokens)
 
-This project demonstrates a clean backend architecture with user authentication, protected routes, and task management.
+A RESTful Task Management API with **Fastify**, **Prisma ORM**, **PostgreSQL**, and **JWT Authentication** — demonstrating a clean modular backend architecture.
 
 ---
 
 ## Tech Stack
 
-| Category           | Technology                                      |
-| ------------------ | ----------------------------------------------- |
-| **Runtime**        | Node.js                                         |
-| **Framework**      | Fastify                                         |
-| **ORM**            | Prisma                                          |
-| **Database**       | PostgreSQL                                      |
-| **Auth**           | JWT (Access + Refresh Tokens)                   |
-| **Password Hash**  | Bcrypt                                          |
-| **API Docs**       | Swagger (via `@fastify/swagger`)                |
-| **Security**       | Helmet, CORS, Rate Limiting, JSON Schema Validation |
+| Layer           | Technology                                                        |
+| --------------- | ----------------------------------------------------------------- |
+| **Runtime**     | Node.js 20+                                                       |
+| **Framework**   | Fastify 5                                                         |
+| **Language**    | JavaScript (ESM)                                                  |
+| **ORM**         | Prisma 6                                                          |
+| **Database**    | PostgreSQL 16                                                      |
+| **Auth**        | JWT (Access + Refresh Tokens) via `@fastify/jwt`                  |
+| **Hashing**     | Bcrypt                                                            |
+| **Validation**  | Fastify JSON Schema (`type: "object"` + `properties`)             |
+| **API Docs**    | Swagger UI via `@fastify/swagger` + `@fastify/swagger-ui`         |
+| **Security**    | Helmet, CORS, Rate Limiting                                       |
+| **Tooling**     | `tsx` (watch mode), Nodemon                                       |
 
 ---
 
 ## Architecture
 
+### System Flow
+
 ```mermaid
 flowchart TB
-  Client[Client / Postman / Frontend]
+  Client["🌐 Client<br/>(Postman / Frontend)"]
 
-  subgraph Fastify_Server [Fastify Server]
+  subgraph Fastify_Server["⚡ Fastify Server"]
     direction TB
-    MW[Middleware Layer<br/>Helmet / CORS / Rate Limiter]
-    Auth[Authentication Plugin<br/>JWT Validation]
-    Routes[Route Layer]
-    Val[Request Validation<br/>JSON Schema]
-    Ctrl[Controllers]
-    Svc[Services / Business Logic]
-    Prisma[Prisma Client]
+    PL["Plugins<br/>@fastify/env, @fastify/jwt,<br/>@fastify/cors, @fastify/helmet,<br/>@fastify/rate-limit, @fastify/swagger"]
+    AUTH["🔐 Auth Plugin<br/>app.authenticate<br/>(JWT preHandler)"]
+    RT["📡 Routes"]
+    VAL["✅ Request Validation<br/>(JSON Schema)"]
+    CTRL["🎮 Controllers"]
+    SVC["🧠 Services<br/>(Business Logic)"]
+    PRISMA["📦 Prisma Client"]
   end
 
-  PG[(PostgreSQL Database)]
+  DB[("🗄️ PostgreSQL<br/>Users & Tasks Tables")]
+  SW[("📖 Swagger UI<br/>/docs")]
 
-  Client -->|HTTP Request| MW
-  MW --> Auth
-  Auth --> Routes
-  Routes --> Val
-  Val --> Ctrl
-  Ctrl --> Svc
-  Svc --> Prisma
-  Prisma --> PG
+  Client -->|"HTTP Request"| PL
+  PL --> AUTH
+  AUTH --> RT
+  RT --> VAL
+  VAL --> CTRL
+  CTRL --> SVC
+  SVC --> PRISMA
+  PRISMA --> DB
+  RT -.->|"schema reflection"| SW
+```
 
-  subgraph Docs [API Documentation]
-    SW[Swagger UI<br/>/docs]
-  end
+### Entity Relationship
 
-  Routes -.-> SW
+```mermaid
+erDiagram
+  User {
+    int id PK
+    string name
+    string email UK
+    string password
+    datetime createdAt
+    datetime updatedAt
+  }
+  Task {
+    int id PK
+    string title
+    string description
+    boolean completed
+    int userId FK
+    datetime createdAt
+    datetime updatedAt
+  }
+  User ||--o{ Task : "has many"
+```
+
+### Request Lifecycle (Register → Login → Create Task)
+
+```mermaid
+sequenceDiagram
+  actor C as Client
+  participant R as Fastify Router
+  participant A as Auth Plugin
+  participant V as JSON Schema
+  participant Ctrl as Controller
+  participant Svc as Service
+  participant P as Prisma
+  participant DB as PostgreSQL
+
+  Note over C,DB: 📝 Register
+  C->>R: POST /auth/register { name, email, password }
+  R->>V: validate body
+  V->>Ctrl: register()
+  Ctrl->>Svc: hash password (bcrypt)
+  Svc->>P: prisma.user.create()
+  P->>DB: INSERT INTO users
+  DB-->>P: user row
+  P-->>Svc: user obj
+  Svc-->>Ctrl: { user, accessToken, refreshToken }
+  Ctrl-->>C: 201 { user, tokens }
+
+  Note over C,DB: 🔑 Login
+  C->>R: POST /auth/login { email, password }
+  R->>V: validate body
+  V->>Ctrl: login()
+  Ctrl->>Svc: verify password (bcrypt)
+  Svc->>P: prisma.user.findUnique()
+  P->>DB: SELECT FROM users
+  DB-->>P: user row
+  P-->>Svc: user
+  Svc-->>Ctrl: { accessToken, refreshToken }
+  Ctrl-->>C: 200 { tokens }
+
+  Note over C,DB: ✅ Create Task (Protected)
+  C->>R: POST /tasks { title, description }
+  R->>A: preHandler: app.authenticate
+  A->>A: verify JWT
+  A-->>R: ✅ decoded payload
+  R->>V: validate body
+  V->>Ctrl: create()
+  Ctrl->>Svc: extract userId from token
+  Svc->>P: prisma.task.create()
+  P->>DB: INSERT INTO tasks
+  DB-->>P: task row
+  P-->>Svc: task
+  Svc-->>Ctrl: task
+  Ctrl-->>C: 201 { task }
 ```
 
 ---
@@ -62,113 +144,111 @@ flowchart TB
 
 ### Authentication
 
-- User Registration
-- User Login
-- JWT Access Token
-- Refresh Token Rotation
-- Logout
-- Protected Routes
+| Feature              | Endpoints                           |
+| -------------------- | ----------------------------------- |
+| User Registration    | `POST /auth/register`               |
+| User Login           | `POST /auth/login`                  |
+| Token Refresh        | `POST /auth/refresh`                |
+| Logout               | `POST /auth/logout`                 |
 
-### Task Management
+### Task Management (All Protected)
 
-- Create Task
-- Get All Tasks
-- Get Task By ID
-- Update Task
-- Delete Task
-- Search Tasks
-- Pagination
+| Feature      | Method | Endpoint            |
+| ------------ | ------ | ------------------- |
+| Create Task  | POST   | `/tasks`            |
+| List Tasks   | GET    | `/tasks`            |
+| Get Task     | GET    | `/tasks/:id`        |
+| Update Task  | PATCH  | `/tasks/:id`        |
+| Delete Task  | DELETE | `/tasks/:id`        |
+| Search Tasks | GET    | `/tasks/search`     |
+| Pagination   | GET    | `/tasks/pagination` |
+
+### Users
+
+| Feature         | Method | Endpoint          |
+| --------------- | ------ | ----------------- |
+| View Profile    | GET    | `/users/profile`  |
+
+### Utilities
+
+| Feature   | Method | Endpoint |
+| --------- | ------ | -------- |
+| Health    | GET    | `/`      |
 
 ### Security
 
 - Password Hashing with Bcrypt
-- JWT Authentication
-- CORS
-- Helmet
-- Rate Limiting
-- Request Validation using Fastify JSON Schema
+- JWT Access + Refresh Token Rotation
+- CORS (via `@fastify/cors`)
+- Helmet security headers (via `@fastify/helmet`)
+- Rate Limiting (via `@fastify/rate-limit`)
+- Request Validation via Fastify JSON Schema
 
 ---
 
 ## Project Structure
 
-```text
+```
 src/
-├── config/        # Configuration (env, db, jwt)
-├── controllers/   # Route handlers
-├── plugins/       # Fastify plugins (auth, swagger, etc.)
-├── routes/        # Route definitions
-├── schemas/       # JSON Schema validation
-├── services/      # Business logic
-├── app.js         # App setup & plugin registration
-└── server.js      # Entry point
+├── config/         # Environment variables (via @fastify/env)
+├── controllers/    # Request handlers (auth, task, user)
+├── generated/      # Prisma-generated client (if applicable)
+├── plugins/        # Fastify plugins (auth decorator, swagger)
+├── routes/         # Route definitions (auth, task, user, root)
+├── schemas/        # JSON Schema validation schemas
+├── services/       # Business logic layer
+├── utils/          # Utility helpers
+├── app.js          # Fastify app setup & plugin registration
+└── server.js       # Entry point (starts the server)
 ```
 
 ---
 
-## Installation
+## Getting Started
 
-Clone the repository.
+### Prerequisites
+
+- Node.js 20+
+- PostgreSQL 16+
+- npm
+
+### Installation
 
 ```bash
 git clone <repository-url>
-```
-
-Go to the project directory.
-
-```bash
 cd task-api
-```
-
-Install dependencies.
-
-```bash
 npm install
 ```
 
----
+### Environment Variables
 
-## Environment Variables
-
-Create a `.env` file in the project root.
+Create a `.env` file in the project root:
 
 ```env
 PORT=3000
-
-DATABASE_URL="your_postgresql_database_url"
-
-JWT_SECRET="your_secret_key"
+DATABASE_URL="postgresql://user:password@localhost:5432/taskdb"
+JWT_SECRET="your-secret-key"
 ```
 
----
-
-## Database
-
-Run Prisma migration.
+### Database Setup
 
 ```bash
+# Apply migrations
 npx prisma migrate dev
-```
 
-Generate Prisma Client.
-
-```bash
+# Generate Prisma Client
 npx prisma generate
 ```
 
----
-
-## Run the Project
-
-**Development**
+### Run
 
 ```bash
 npm run dev
 ```
 
----
+Server starts at `http://localhost:3000`.
 
-## API Documentation
+### API Documentation
 
 Swagger UI is available at:
 
@@ -178,49 +258,43 @@ http://localhost:3000/docs
 
 ---
 
-## Main API Endpoints
+## Data Models
 
-### Authentication
+### User
 
-| Method | Endpoint          |
-| ------ | ----------------- |
-| POST   | /auth/register    |
-| POST   | /auth/login       |
-| POST   | /auth/refresh     |
-| POST   | /auth/logout      |
+| Field     | Type     | Notes                |
+| --------- | -------- | -------------------- |
+| id        | Int      | Primary Key (auto)   |
+| name      | String   |                      |
+| email     | String   | Unique                |
+| password  | String   | Bcrypt hashed         |
+| createdAt | DateTime | Auto                  |
+| updatedAt | DateTime | Auto                  |
 
-### Users
+### Task
 
-| Method | Endpoint        |
-| ------ | --------------- |
-| GET    | /users/profile  |
-
-### Tasks
-
-| Method | Endpoint          |
-| ------ | ----------------- |
-| POST   | /tasks            |
-| GET    | /tasks            |
-| GET    | /tasks/:id        |
-| PATCH  | /tasks/:id        |
-| DELETE  | /tasks/:id        |
-| GET    | /tasks/search     |
-| GET    | /tasks/pagination |
+| Field       | Type     | Notes                     |
+| ----------- | -------- | ------------------------- |
+| id          | Int      | Primary Key (auto)        |
+| title       | String   |                           |
+| description | String?  | Optional                   |
+| completed   | Boolean  | Default: false            |
+| userId      | Int      | Foreign Key → User        |
+| createdAt   | DateTime | Auto                      |
+| updatedAt   | DateTime | Auto                      |
 
 ---
 
 ## Learning Goals
 
-This project helped me learn:
-
 - Fastify Plugin Architecture
-- REST API Development
-- Prisma ORM
+- REST API Design
+- Prisma ORM (Migrations, Client, Relations)
 - PostgreSQL
-- JWT Authentication
-- Request Validation
-- Error Handling
-- Backend Project Structure
+- JWT Authentication (Access + Refresh Tokens)
+- Request Validation with JSON Schema
+- Error Handling patterns
+- Modular Backend Structure
 - API Documentation with Swagger
 
 ---
